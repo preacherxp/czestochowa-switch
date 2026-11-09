@@ -209,7 +209,6 @@
     w.clockAt = [174, 72];
     w.lightRect(139, 108, 23, 2, N.FLOOD, w.hallG);
     w.lightRect(187, 108, 22, 2, N.FLOOD, w.hallG);
-    w.hsign(147, 113, 54, 7, 'PLAC BIEGANSKIEGO', { n: N.LED_SOFT, g: w.hallG, board: M.COPPER_D, off: M.TRIM, gap: 0 });
   };
 
   const drawAleje = (w) => {
