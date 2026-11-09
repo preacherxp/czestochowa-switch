@@ -2,7 +2,7 @@
 
 Contemporary Częstochowa in a pixel-art day/night switch: Jasna Góra, the tree-lined Aleja NMP, the Ratusz on Plac Biegańskiego, café terraces, and a red-and-white Pesa Twist tram.
 
-[Live demo](https://preacherxp.github.io/czestochowa-switch/)
+[Live demo](https://preacherxp.github.io/czestochowa-switch/) · [60 fps MP4](czestochowa-day-night-60fps.mp4)
 
 The scene is a compressed city panorama. The tram crossing evokes Aleja Wolności/Kościuszki; it does not suggest trams run along the pedestrian avenue toward the monastery.
 
@@ -38,3 +38,5 @@ GitHub Pages serves `/` from `main`; push to that branch to update the demo.
 ## Attribution
 
 The shared engine is derived from `tokyo-switch.js`; the original idea is “住人のいるスイッチ” by @Lattice_Node ([original project](https://ludion.ai/p/toggle-daylight), MIT), as credited in the engine source.
+
+The MP4 is a seven-second recording of the complete browser-rendered switch at 800 × 500 and 60 fps, including the moving glass lens.
