@@ -17,9 +17,26 @@ const context = vm.createContext({
   matchMedia: () => ({ matches: false }),
 });
 context.window = context;
-for (const file of ['city-switch.js', 'czestochowa.js']) {
-  vm.runInContext(fs.readFileSync(path.join(__dirname, file), 'utf8'), context, { filename: file });
-}
+vm.runInContext(fs.readFileSync(path.join(__dirname, 'city-switch.js'), 'utf8'), context);
+const define = context.CitySwitch.define;
+context.CitySwitch.define = (tag, scene) => {
+  const build = scene.build;
+  scene.build = (world, ctx) => {
+    const sign = world.hsign.bind(world);
+    world.hsign = (x, y, width, height, text, options) => {
+      const gap = options.gap ?? 1;
+      assert.ok(gap >= 1, `${text}: letters need a visible gap`);
+      const glyphs = [...text].map((ch) => (options.font === 5 && ctx.FONT5[ch]) || ctx.GLYPH[ch] || ctx.FONT3[ch]);
+      assert.ok(glyphs.every(Boolean), `${text}: every accented letter must exist`);
+      assert.ok(glyphs.reduce((sum, glyph) => sum + glyph[0].length + gap, -gap) <= width - 2, `${text}: text must fit its board`);
+      assert.ok(Math.max(...glyphs.map((glyph) => glyph.length)) <= height - 2, `${text}: accents need vertical padding`);
+      sign(x, y, width, height, text, options);
+    };
+    build(world, ctx);
+  };
+  return define(tag, scene);
+};
+vm.runInContext(fs.readFileSync(path.join(__dirname, 'czestochowa.js'), 'utf8'), context);
 const Switch = registry.get('czestochowa-switch');
 assert.ok(Switch, 'the scene registers its custom element');
 const world = new Switch().world;

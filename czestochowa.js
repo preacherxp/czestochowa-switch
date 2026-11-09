@@ -218,13 +218,13 @@
       w.rect(x + width - 2, top, 2, 113 - top, M.CREAM_D);
       w.rect(x - 1, top - 2, width + 2, 3, M.TILE_D);
       w.rect(x, 94, width, 2, M.TRIM);
-      for (let y = top + 6; y < 91; y += 13) for (let dx = 5; dx < width - 5; dx += 11) windowAt(w, x + dx, y, 5, 8, w.winGroups[(y + dx) % 28]);
-      w.rect(x + 2, 99, width - 4, 13, M.FGL);
-      w.lightRect(x + 3, 100, width - 6, 11, N.WARM, w.cafeG);
-      for (let dx = 10; dx < width - 3; dx += 10) w.rect(x + dx, 99, 1, 13, M.COPPER_D);
+      for (let y = top + 6; y <= 85; y += 13) for (let dx = 5; dx < width - 5; dx += 11) windowAt(w, x + dx, y, 5, 8, w.winGroups[(y + dx) % 28]);
+      w.rect(x + 2, 106, width - 4, 7, M.FGL);
+      w.lightRect(x + 3, 107, width - 6, 5, N.WARM, w.cafeG);
+      for (let dx = 10; dx < width - 3; dx += 10) w.rect(x + dx, 106, 1, 7, M.COPPER_D);
     }
-    w.hsign(250, 95, 34, 7, 'KAWIARNIA', { n: N.B_WHITE, g: w.cafeG, board: M.COPPER_D, off: M.TRIM, gap: 0 });
-    w.hsign(287, 95, 32, 7, 'KSIAZKI', { n: N.LED_SOFT, g: w.cafeG, board: M.COPPER_D, off: M.TRIM });
+    w.hsign(219, 95, 29, 10, 'KAWA', { n: N.B_WHITE, g: w.cafeG, board: M.COPPER_D, off: M.TRIM, font: 5 });
+    w.hsign(251, 94, 68, 12, 'KSIĄŻKI', { n: N.LED_SOFT, g: w.cafeG, board: M.COPPER_D, off: M.TRIM });
     // A tree-lined pedestrian axis leads toward Jasna Góra through the gap.
     for (const [x, y, radius] of [[101, 104, 5], [116, 111, 7], [126, 120, 9], [81, 112, 7], [51, 122, 9]]) {
       w.rect(x, y - 8, 1, 13, M.TIMBER_D);
@@ -304,7 +304,15 @@
     city:'Częstochowa',label:'Częstochowa day and night',
     tube:['#e45252','#75b5e3'],body:['#e9e6dd','#111f31'],glass:'clear',
     sky:SKY,grade,palette,build,draw,
-    glyphs:{W:['#...#','#...#','#.#.#','#.#.#','.#.#.']},
+    glyphs:{
+      // One baseline for the 5-pixel sign letters and their Polish accents.
+      K:['.....','.....','#...#','#..#.','#.#..','##...','#.#..','#..#.','#...#','.....'],
+      S:['.....','.....','.####','#....','#....','.###.','....#','....#','####.','.....'],
+      I:['...','...','###','.#.','.#.','.#.','.#.','.#.','###','...'],
+      Ą:['.....','.....','.###.','#...#','#...#','#####','#...#','#...#','#...#','...#.'],
+      Ż:['..#..','.....','#####','....#','...#.','..#..','.#...','#....','#####','.....'],
+      W:['#...#','#...#','#.#.#','#.#.#','.#.#.'],
+    },
     street:(M)=>[M.PAVE,M.PAVE_D,M.STONE,M.STONE_D],
     weather:(h)=>({wet:.2*smooth(18.5,20,h)*(1-smooth(29,31,h))}),
     post:(w)=>w.reflect(),startle:(w)=>{w.cat.puff=1.4;},
