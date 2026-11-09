@@ -1,6 +1,6 @@
 # Częstochowa switch
 
-Contemporary Częstochowa in a pixel-art day/night switch: Jasna Góra, the tree-lined Aleja NMP, the Ratusz on Plac Biegańskiego, café terraces, and a red-and-white Pesa Twist tram.
+Contemporary Częstochowa in a pixel-art day/night switch: Jasna Góra with its floodlit tower, the lime-lined Aleja NMP, the Ratusz on Plac Biegańskiego, café terraces, a walking pilgrimage, and a red-and-white Pesa Twist tram.
 
 [Live demo](https://preacherxp.github.io/czestochowa-switch/) · [60 fps MP4](czestochowa-day-night-60fps.mp4)
 
@@ -33,7 +33,12 @@ GitHub Pages serves `/` from `main`; push to that branch to update the demo.
 
 - [Częstochowa city: Aleja NMP and Plac Biegańskiego](https://www.czestochowa.pl/2026-rokiem-miasta-czestochowy).
 - [City: modernization of Aleja NMP](https://fe.czestochowa.pl/page/2716,wzmocnienie-znaczenia-centrum-pielgrzymkowego-poprzez-modernizacje-alei-najswietszej-marii-panny-w-czestochowie.html).
-- [MPK: the Pesa Twist and its red-and-white livery](https://www.mpk.czest.pl/aktualnosci/2012/03/pierwszy-twist-w-czestochowie).
+- [MPK: the Pesa Twist and its red-and-white livery](https://www.mpk.czest.pl/aktualnosci/2012/03/pierwszy-twist-w-czestochowie), and [MPK: the 2020 Twist 2](https://www.mpk.czest.pl/galeria/pierwszy-z-10-nowych-tramwajow-dla-czestochowy-dotarl-do-zajezdni).
+- [Encyklopedia Częstochowy: the limes of the Aleje](https://encyklopedia.czestochowa.pl/hasla/drzewa-w-alejach).
+- [The tower's floodlighting since 2018](https://nettg.pl/czestochowa-tauron-na-bialo-czerwono-oswietli-wieze-sanktuarium), and [Jasna Góra at night, 2019](https://commons.wikimedia.org/wiki/File:Jasna_G%C3%B3ra,_noc,_2019.jpg).
+- [A walking pilgrimage arriving, August 2024](https://commons.wikimedia.org/wiki/File:Piesza_pielgrzymka_na_Jasn%C4%85_G%C3%B3r%C4%99_z_Brze%C5%BAnicy,_sierpie%C5%84_2024_038.jpg), and [the Pauline order's white habit](https://paulini.pl/en/our-habit/).
+
+[RESEARCH.md](RESEARCH.md) lists the photographs that were opened and what could not be verified.
 
 ## Attribution
 

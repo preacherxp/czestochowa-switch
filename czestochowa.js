@@ -17,8 +17,8 @@
       CREAM: '#eee2c8', CREAM_D: '#cbbd9f', TEN_Y: '#e4c992', TEN_P: '#e2b6a5',
       TEN_G: '#b4cbb8', TILE_R: '#a36752', TILE_D: '#744a3d',
       FGL: '#678e9c', FGL_H: '#bfd6dc', STONE: '#c8c5b9', STONE_D: '#a5aea8',
-      TIMBER: '#8b6c4d', TIMBER_D: '#5b4c3e', TREE: '#568164', TREE_D: '#355d4d',
-      TREE_L: '#80a875', LEAF: '#73965e', PLANTER: '#737f78',
+      TIMBER: '#8b6c4d', TIMBER_D: '#5b4c3e', TREE: '#5a8a50', TREE_D: '#355d4d',
+      TREE_L: '#8db466', LIME_S: '#bccfb2', LEAF: '#73965e', PLANTER: '#737f78',
       CHAIR: '#506b65', LABEL: '#e9ca8e', TRAM_R: '#d94446', TRAM_D: '#a62f39',
       TRAM_W: '#e9eeea', TRAM_GL: '#243e51', RAIL: '#8d999d',
     })) mat(name,hex);
@@ -29,6 +29,8 @@
     neon('FLOOD', '#ffe4a7', '#f5c17b', .22);
     neon('LED_SOFT', '#f9f5df', '#dce9ed', .28);
     neon('TRAM_LED', '#ffc47a', '#ff9b49', .28);
+    // The tower's cool-white floodlighting, a step dimmer than its clock faces.
+    neon('TOWER', '#cdd8d6', '#dce9ed', .16);
   };
   const grade = [
     ([r, g, b]) => [r, g, b],
@@ -49,17 +51,18 @@
       if (e2 <= dx) { err += dx; y0 += sy; }
     }
   };
-  const tree = (w, cx, cy, rw, rh, r) => {
-    for (let y = -rh; y <= rh; y++) {
-      for (let x = -rw; x <= rw; x++) {
-        const d = (x * x) / (rw * rw) + (y * y) / (rh * rh);
-        if (d > 1 + (r() - 0.5) * 0.3) continue;
+  // The limes of the Aleje (silver lime in I and II Aleja, Dutch lime in III): a dense egg-shaped crown,
+  // widest low down and trimmed flat underneath, with pale leaf undersides showing on the sunny side.
+  const lime = (w, cx, bottom, rw, h, r) => {
+    for (let j = 0; j < h; j++) {
+      const t = j / (h - 1);
+      const half = Math.round(rw * Math.sqrt(Math.max(0, 1 - ((t - .64) / (t < .64 ? .66 : .4)) ** 2)) + (r() - .5) * 1.2);
+      for (let x = -half; x <= half; x++) {
         const v = r();
-        let m = M.TREE;
-        if (y > rh * 0.2 || x > rw * 0.4) m = v < 0.7 ? M.TREE_D : M.TREE;
-        else if (y < -rh * 0.25 && x < rw * 0.2) m = v < 0.55 ? M.TREE_L : M.TREE;
-        else if (v < 0.3) m = M.TREE_D;
-        w.px(cx + x, cy + y, m);
+        let m = v < .3 ? M.TREE_D : M.TREE;
+        if (x > half * .35 || t > .85) m = v < .75 ? M.TREE_D : M.TREE;
+        else if (x < -half * .15 && t < .7) m = v < .14 ? M.LIME_S : v < .6 ? M.TREE_L : M.TREE;
+        w.px(cx + x, bottom - h + 1 + j, m);
       }
     }
   };
@@ -78,29 +81,34 @@
     }
   };
 
+  const dome = (u, centre, radius) => Math.sqrt(Math.max(0, 1 - ((u - centre) / radius) ** 2));
+  // Jasna Góra closes the Aleje to the west: the sun comes up over the tenements, stands above the
+  // avenue at noon and goes down behind the monastery beside the tower. The moon follows the same way.
   const drawSky = (w, dt, hour) => {
     const h = hour;
-    if (h < 18.4) {
-      const t = clamp((h - 12) / (18.1 - 12));
-      const low = smooth(15.6, 17.4, h);
-      w.sun(mix(118, 8, t), mix(16, 58, t * t * t), low > 0.3 ? 6 : 5, low);
-    } else if (h > 29.2) {
-      const t = clamp((h - 29.2) / (36 - 29.2));
-      const low = 1 - smooth(30.2, 31.8, h);
-      w.sun(mix(304, 118, t), mix(82, 16, Math.sqrt(t)), low > 0.3 ? 6 : 5, low);
+    if (h < 18.5) {
+      const t = clamp((h - 12) / 6.3);
+      const low = smooth(15.8, 17.6, h);
+      w.sun(mix(214, 30, t * (.6 + .4 * t)), 20 + 54 * Math.pow(t, 2.4), low > .3 ? 7 : 5, low);
+    } else if (h > 29.3) {
+      const t = clamp((h - 29.3) / 6.7);
+      const low = 1 - smooth(30.4, 32.2, h);
+      w.sun(mix(322, 214, t), 80 - 60 * Math.sin(t * Math.PI / 2), low > .3 ? 7 : 5, low);
     }
-    if (h > 18.6 && h < 29.4) w.moon(mix(96, 142, (h - 18.6) / 10.8), mix(30, 18, Math.sin(((h - 18.6) / 10.8) * Math.PI)));
-    for (const c of w.strata) {
+    if (h > 18.9 && h < 29.6) {
+      const t = (h - 18.9) / 10.7;
+      w.moon(mix(286, 92, t), 44 - 28 * Math.sin(t * Math.PI));
+    }
+    w.drawStars();
+    // Fair-weather cumulus on the west wind: a flat base under three domes, the tallest off-centre.
+    for (const c of w.cumulus) {
       c.x += c.v * dt;
-      if (c.x > 370) c.x = -c.w - 40;
+      if (c.x > 372) c.x = -c.w - 44;
       const cx = Math.round(c.x);
       for (let i = 0; i < c.w; i++) {
-        const edge = Math.min(i, c.w - i);
-        const thick = Math.round(Math.min(edge * 0.12, 1.5) + Math.sin(i * 0.17 + c.w) * 0.8 + 0.5);
-        for (let j = -thick; j <= 0; j++) {
-          if ((i + j * 3 + c.y) % 5 === 0 && edge < 18) continue;
-          w.pxSky(cx + i, c.y + j, j === 0 ? M.CLOUD_SH : M.CLOUD);
-        }
+        const u = i / c.w;
+        const top = Math.round(c.h * Math.max(dome(u, .2, .2) * .55, dome(u, .5, .3), dome(u, .82, .18) * .45));
+        for (let j = 0; j <= top; j++) w.pxSky(cx + i, c.y - j, j === 0 || (u > .5 && j < top * .4) ? M.CLOUD_SH : M.CLOUD);
       }
     }
   };
@@ -124,20 +132,30 @@
     w.rect(-40, 137, 400, 1, M.PAVE_D);
   };
 
-  const terrace = (w, x, y, umbrella) => {
+  // `guest` is the shirt of whoever sits there while the café is open; they lift the cup now and then.
+  const terrace = (w, x, y, umbrella, guest) => {
     w.rect(x + 6, y - 9, 1, 12, M.CHAIR);
     for (let dx = -2; dx <= 14; dx++) {
       const top = y - 11 + Math.floor(Math.abs(dx - 6) / 4);
       w.rect(x + dx, top, 1, y - 7 - top, umbrella);
     }
+    if (guest) {
+      w.rect(x + 1, y - 6, 2, 3, M.SKIN);
+      w.rect(x + 1, y - 6, 2, 1, M.HAIR);
+      w.rect(x + 1, y - 3, 2, 5, guest);
+      w.rect(x + 1, y + 2, 3, 1, M.SUIT);
+      w.rect(x + 3, y + 3, 1, 2, M.SUIT);
+    }
+    const sip = guest && (w.t * .5 + x) % 9 < 1.2;
     w.rect(x + 2, y, 9, 1, M.TIMBER);
     w.rect(x + 6, y + 1, 1, 4, M.CHAIR);
     for (const dx of [0, 12]) {
       w.rect(x + dx, y - 1, 1, 5, M.CHAIR);
       w.rect(x + dx - 1, y + 2, 3, 1, M.CHAIR);
     }
-    w.px(x + 4, y - 1, M.TRIM);
+    w.px(sip ? x + 3 : x + 4, sip ? y - 4 : y - 1, M.TRIM);
     w.px(x + 8, y - 1, M.LABEL);
+    if (guest && w.dark > .3) w.pxLight(x + 8, y - 1, N.YELLOW);
   };
 
   const drawJasnaGora = (w) => {
@@ -151,8 +169,10 @@
     w.rect(-12, 77, 113, 3, M.TILE_D);
     for (let x = -4; x < 96; x += 8) {
       w.rect(x, 84, 3, 6, M.FGL);
-      w.lightRect(x, 85, 3, 5, N.WARM_DIM, w.monasteryG);
+      // Cells and corridors come on one by one rather than as a single block.
+      w.lightRect(x, 85, 3, 5, N.WARM_DIM, (x >> 3) % 3 ? w.winGroups[(x + 9) % 28] : w.monasteryG);
       w.rect(x, 94, 3, 5, M.FGL);
+      if ((x >> 3) % 2) w.lightRect(x, 94, 3, 3, N.WARM_DIM, w.winGroups[(x + 20) % 28]);
     }
     // Basilica nave, apse and copper roof.
     w.rect(4, 61, 46, 19, M.CREAM);
@@ -163,7 +183,12 @@
     const x = 62;
     w.rect(x - 7, 37, 15, 45, M.CREAM);
     w.rect(x + 5, 37, 3, 45, M.CREAM_D);
-    for (const y of [37, 50, 66, 78]) w.rect(x - 9, y, 19, 2, M.TRIM);
+    // After dark the shaft is floodlit cool white from the monastery roofs, cornices brightest; windows stay dark.
+    w.lightRect(x - 7, 37, 12, 38, N.TOWER, w.monasteryG);
+    for (const y of [37, 50, 66, 78]) {
+      w.rect(x - 9, y, 19, 2, M.TRIM);
+      if (y < 78) w.lightRect(x - 9, y, 19, 2, N.LED_SOFT, w.monasteryG);
+    }
     for (const [y, height] of [[54, 8], [68, 6]]) {
       w.rect(x - 3, y, 6, height, M.FGL);
       w.rect(x - 1, y, 2, height, M.CREAM_D);
@@ -172,6 +197,7 @@
     w.monasteryClockAt = [x, 44];
     w.rect(x - 4, 26, 9, 11, M.COPPER_D);
     w.rect(x - 2, 28, 5, 7, M.TRIM);
+    w.lightRect(x - 2, 28, 5, 7, N.TOWER, w.monasteryG);
     w.rect(x, 28, 1, 7, M.COPPER_D);
     for (let y = 17; y < 26; y++) {
       const half = Math.max(1, Math.round((y - 17) * .7));
@@ -236,10 +262,10 @@
   // A tree-lined pedestrian axis leads toward Jasna Góra through the gap.
   const TREES = [[101, 104, 5], [116, 111, 7], [126, 120, 9], [81, 112, 7], [51, 122, 9]];
   const LAMPS = [[103, 109], [111, 118], [103, 132]];
-  const drawProps = (w, front) => {
+  const drawProps = (w, front, open) => {
     for (const [x, y, radius] of TREES) if (y + 6 > FEET === front) {
       w.rect(x, y - 8, 1, 13, M.TIMBER_D);
-      tree(w, x, y - 14, radius, radius + 1, rng(x));
+      lime(w, x, y - 6, radius - 1, radius * 2 + 6, rng(x));
       w.rect(x - 4, y + 3, 9, 4, M.PLANTER);
       w.rect(x - 4, y + 3, 9, 1, M.LEAF);
     }
@@ -250,7 +276,7 @@
     }
     if (!front) return;
     // Café gardens between the walkers and the tram, umbrellas clear of the shop signs.
-    terrace(w, 240, 118, M.TRIM); terrace(w, 276, 118, M.COPPER); terrace(w, 311, 118, M.TRIM);
+    terrace(w, 240, 118, M.TRIM, open && M.SHIRT_B); terrace(w, 276, 118, M.COPPER, open && M.TRAM_D); terrace(w, 311, 118, M.TRIM, open && M.COAT);
     // The tram's contact wire sags between masts on the far side of the track, below the shopfronts.
     for (let x = MAST0 - SPAN; x < 360; x += SPAN) w.wire(x, WIRE, x + SPAN, WIRE, SAG);
     for (let x = MAST0; x < 360; x += SPAN) {
@@ -271,30 +297,46 @@
     const x = Math.round(w.tramX), y = TRAM_Y;
     for (let i = 0; i < 3; i++) {
       const sx = x + i * 28;
-      w.rect(sx, y - 16, 26, 15, M.TRAM_W);
+      // MPK's 2012 Twist: red to the roof line, grey roof gear, one dark window band, a white waist stripe.
+      w.rect(sx, y - 16, 26, 15, M.TRAM_R);
+      w.rect(sx + 4, y - 17, 18, 1, M.STEEL);
       w.rect(sx, y - 14, 26, 8, M.TRAM_GL);
-      w.rect(sx, y - 6, 26, 4, M.TRAM_R);
+      w.rect(sx, y - 6, 26, 1, M.TRAM_W);
       w.rect(sx, y - 2, 26, 2, M.TRAM_D);
-      w.rect(sx + 3, y - 14, 1, 8, M.TRAM_W);
-      w.rect(sx + 16, y - 14, 1, 8, M.TRAM_W);
+      w.rect(sx + 3, y - 14, 1, 8, M.FRAME);
+      w.rect(sx + 16, y - 14, 1, 8, M.FRAME);
       w.rect(sx + 17, y - 13, 6, 10, M.TRAM_GL);
       if (w.dark > .2) w.lightRect(sx + 5, y - 13, 10, 5, N.WARM_DIM, w.tramG);
       w.rect(sx + 5, y, 4, 1, M.TIRE);
       w.rect(sx + 19, y, 4, 1, M.TIRE);
-      if (i < 2) w.rect(sx + 26, y - 14, 2, 13, M.COPPER_D);
+      if (i < 2) w.rect(sx + 26, y - 14, 2, 13, M.STEEL_LT);
     }
-    // Sloping windscreen, low floor, destination display and raised pantograph.
-    w.rect(x + 82, y - 14, 3, 12, M.TRAM_R);
-    w.rect(x + 82, y - 13, 2, 7, M.TRAM_GL);
-    w.rect(x + 83, y - 4, 2, 1, M.TRIM);
+    // Raked cab with a white windscreen surround over the red bumper; amber route display in the leading window.
+    w.rect(x + 82, y - 14, 2, 12, M.TRAM_R);
+    w.rect(x + 84, y - 13, 1, 11, M.TRAM_R);
+    w.rect(x + 82, y - 14, 2, 8, M.TRAM_GL);
+    w.rect(x + 84, y - 12, 1, 6, M.TRAM_W);
+    w.rect(x + 82, y - 6, 3, 1, M.TRAM_W);
+    w.px(x + 84, y - 4, M.TRIM);
     if (w.dark > .2) w.pxLight(x + 84, y - 4, N.HEAD);
-    w.rect(x + 60, y - 16, 14, 3, M.COPPER_D);
-    w.lightRect(x + 62, y - 15, 9, 1, N.TRAM_LED, w.tramG);
-    const top = wireAt(x + 42) + 1;
-    w.rect(x + 36, y - 17, 13, 1, M.COPPER_D);
-    line(x + 38, y - 18, x + 41, top + 1, (px,py)=>w.px(px,py,M.COPPER_D));
-    line(x + 43, top + 1, x + 46, y - 18, (px,py)=>w.px(px,py,M.COPPER_D));
-    w.rect(x + 39, top, 7, 1, M.COPPER_D);
+    w.lightRect(x + 61, y - 14, 9, 1, N.TRAM_LED, w.tramG);
+    // Single-arm pantograph on the leading section, knee forward, its head following the wire.
+    const hx = x + 66, top = wireAt(hx) + 1;
+    w.rect(hx - 3, top, 7, 1, M.COPPER_D);
+    line(hx, top + 1, hx + 4, y - 19, (px,py)=>w.px(px,py,M.COPPER_D));
+    line(hx + 4, y - 19, hx + 1, y - 18, (px,py)=>w.px(px,py,M.COPPER_D));
+  };
+
+  // A walking pilgrimage on its last stretch to Jasna Góra: a flowered wooden cross in front, then the group's sign.
+  const drawPilgrimage = (w) => {
+    const [lead, , bearer] = w.pilgrims;
+    const cx = Math.round(lead.x) - 1, sx = Math.round(bearer.x) - 1, y = lead.y;
+    w.rect(cx, y - 10, 1, 7, M.TIMBER);
+    w.rect(cx - 1, y - 9, 3, 1, M.TIMBER);
+    w.px(cx, y - 8, M.TRAM_R);
+    w.rect(sx, y - 8, 1, 5, M.TIMBER_D);
+    w.rect(sx - 1, y - 10, 5, 2, M.BOARD_B);
+    w.px(sx + 1, y - 10, M.BOARD_Y);
   };
 
   const build = (w, ctx) => {
@@ -313,18 +355,28 @@
     // Tram crossing at the Aleja Wolności/Kościuszki end, in front of the square.
     w.rect(-40,TRAM_Y-7,400,1,M.RAIL); w.rect(-40,TRAM_Y+1,400,1,M.RAIL);
     w.tramX=-96;
-    w.strata=[{x:-20,y:15,w:65,v:.6},{x:220,y:12,w:75,v:.4}];
+    w.cumulus=[{x:96,y:30,w:36,h:8,v:1.1},{x:262,y:50,w:22,h:4,v:.7},{x:-30,y:24,w:46,h:10,v:.9}];
     w.cat.x=217;w.cat.y=121;
-    for(const [x,y,dir,speed,style] of [[20,FEET+1,1,5,'coat'],[87,FEET+2,-1,4,'shirt'],[150,FEET,1,5,'coat'],[221,FEET+2,-1,6,'shirt'],[290,FEET+1,1,4,'suit']])w.peds.push({x,y,dir,speed,style,phase:x%3});
-    w.personStyles.coat=[M.COPPER_D,M.SUIT,M.HAIR];
+    // The last three come out for the evening; the white habit is a Pauline father from the monastery.
+    for(const [x,y,dir,speed,style,nightOnly] of [[20,FEET+1,1,5,'coat'],[87,FEET+2,-1,4,'shirt'],[150,FEET,1,5,'coat'],[221,FEET+2,-1,6,'shirt'],[290,FEET+1,1,4,'suit'],[120,FEET,-1,3,'habit'],
+      [60,FEET+1,1,4,'pink',true],[200,FEET,-1,5,'blue',true],[335,FEET+2,-1,4,'coat',true]])w.peds.push({x,y,dir,speed,style,phase:x%3,nightOnly});
+    Object.assign(w.personStyles,{coat:[M.COPPER_D,M.SUIT,M.HAIR],habit:[M.TRIM,M.TRIM,M.HAIR],cassock:[M.PAINT_K,M.PAINT_K,M.HAIR],
+      blue:[M.SHIRT_B,M.COAT,M.HAIR],pink:[M.SHIRT_P,M.SUIT,M.TIMBER],sun:[M.POSTER_C,M.FGL,M.TIMBER_D]});
+    // The pilgrims walk as ordinary pedestrians in step with each other; draw() takes them off the street at night.
+    w.pilgrims=['blue','cassock','sun','pink','shirt','blue','sun'].map((style,i)=>({x:300+i*5,y:0,dir:-1,speed:3.5,style,phase:i}));
+    w.peds.push(...w.pilgrims);
   };
   const draw=(w,dt,hour)=>{
     drawSky(w,dt,hour);
+    // Groups reach the monastery by day. Feet on FEET+1 and FEET+2 keep the cross and the sign a row clear of the shop boards.
+    const pilgrimage=hour<20.5||hour>30.5;
+    for(const p of w.pilgrims)p.y=pilgrimage?FEET+2-p.phase%2:400;
     for (const [cx, cy] of [w.clockAt, w.monasteryClockAt]) {
       for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++)if(dx*dx+dy*dy<=16)w.tube(cx+dx,cy+dy,M.TRIM,N.LED_SOFT,w.hallG);
       for(const [angle,length] of [[(hour%1)*Math.PI*2-Math.PI/2,3],[(hour%12)/12*Math.PI*2-Math.PI/2,2]])line(cx,cy,cx+Math.round(Math.cos(angle)*length),cy+Math.round(Math.sin(angle)*length),(x,y)=>w.px(x,y,M.COPPER_D));
     }
-    w.drawPeople(dt,hour);w.drawCat(dt,hour);drawProps(w,true);drawTram(w,dt);
+    w.drawPeople(dt,hour);if(pilgrimage)drawPilgrimage(w);
+    w.drawCat(dt,hour);drawProps(w,true,hour<25||hour>32.5);drawTram(w,dt);
   };
   CitySwitch.define('czestochowa-switch',{
     city:'Częstochowa',label:'Częstochowa day and night',

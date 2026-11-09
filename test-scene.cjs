@@ -50,14 +50,21 @@ for (const hour of [12, 17, 18.5, 22, 26, 29, 31, 36]) {
   if (hour === 22) {
     assert.notDeepEqual(world.rgba, daylight, 'night changes the scene');
     assert.ok(world.levels[world.cafeG] > .9, 'Café lights up at night');
+    assert.ok(world.levels[world.monasteryG] > .9, 'the tower is floodlit at night');
+    assert.ok(world.pilgrims.every((pilgrim) => pilgrim.y > 190), 'the pilgrimage is off the street at night');
   }
+  if (hour === 12 || hour === 36) assert.ok(world.pilgrims.every((pilgrim) => pilgrim.y > 115 && pilgrim.y < 118), 'pilgrims keep to the pavement lane by day');
 }
 world.startle();
+const leader = world.pilgrims[0].x;
 world.tick(1 / 30, 18);
 assert.ok(world.cat.puff > 0, 'the cat still reacts to a quick drag');
+assert.ok(world.pilgrims[0].x < leader, 'the pilgrimage walks toward Jasna Góra');
 const frozenTime = world.t;
+const frozenLeader = world.pilgrims[0].x;
 world.tick(1 / 30, 22, { calm: true });
 assert.equal(world.t, frozenTime, 'reduced motion stops the scene animation');
+assert.equal(world.pilgrims[0].x, frozenLeader, 'reduced motion stops the pilgrimage');
 assert.equal(world.levels[world.cafeG], 1);
 
 // Optional raw frames let the same check produce a visual preview without browser dependencies.
