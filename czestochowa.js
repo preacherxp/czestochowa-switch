@@ -164,11 +164,12 @@
     w.rect(x - 7, 37, 15, 45, M.CREAM);
     w.rect(x + 5, 37, 3, 45, M.CREAM_D);
     for (const y of [37, 50, 66, 78]) w.rect(x - 9, y, 19, 2, M.TRIM);
-    for (const y of [41, 54]) {
-      w.rect(x - 3, y, 6, 8, M.FGL);
-      w.rect(x - 1, y, 2, 8, M.CREAM_D);
+    for (const [y, height] of [[54, 8], [68, 6]]) {
+      w.rect(x - 3, y, 6, height, M.FGL);
+      w.rect(x - 1, y, 2, height, M.CREAM_D);
     }
-    w.monasteryClockAt = [x, 71];
+    // The clock sits high on the tower, between the first two cornices below the lantern.
+    w.monasteryClockAt = [x, 44];
     w.rect(x - 4, 26, 9, 11, M.COPPER_D);
     w.rect(x - 2, 28, 5, 7, M.TRIM);
     w.rect(x, 28, 1, 7, M.COPPER_D);
@@ -224,25 +225,50 @@
       for (let dx = 10; dx < width - 3; dx += 10) w.rect(x + dx, 106, 1, 7, M.COPPER_D);
     }
     w.hsign(219, 95, 29, 10, 'KAWA', { n: N.B_WHITE, g: w.cafeG, board: M.COPPER_D, off: M.TRIM, font: 5 });
-    w.hsign(251, 94, 68, 12, 'KSIĄŻKI', { n: N.LED_SOFT, g: w.cafeG, board: M.COPPER_D, off: M.TRIM });
-    // A tree-lined pedestrian axis leads toward Jasna Góra through the gap.
-    for (const [x, y, radius] of [[101, 104, 5], [116, 111, 7], [126, 120, 9], [81, 112, 7], [51, 122, 9]]) {
+    w.hsign(252, 94, 56, 12, 'KSIĄŻKI', { n: N.LED_SOFT, g: w.cafeG, board: M.COPPER_D, off: M.TRIM });
+  };
+
+  // Walkers keep to the pavement in front of the shops, feet on rows FEET..FEET+2. Anything
+  // standing nearer than that lane is repainted after them every frame, so it hides them.
+  const FEET = 115;
+  // The tram runs below them, its roof well clear of the lane; the wire sits just above its pantograph.
+  const TRAM_Y = 147, WIRE = TRAM_Y - 23, MAST0 = 30, SPAN = 116, SAG = 2;
+  // A tree-lined pedestrian axis leads toward Jasna Góra through the gap.
+  const TREES = [[101, 104, 5], [116, 111, 7], [126, 120, 9], [81, 112, 7], [51, 122, 9]];
+  const LAMPS = [[103, 109], [111, 118], [103, 132]];
+  const drawProps = (w, front) => {
+    for (const [x, y, radius] of TREES) if (y + 6 > FEET === front) {
       w.rect(x, y - 8, 1, 13, M.TIMBER_D);
       tree(w, x, y - 14, radius, radius + 1, rng(x));
       w.rect(x - 4, y + 3, 9, 4, M.PLANTER);
       w.rect(x - 4, y + 3, 9, 1, M.LEAF);
     }
-    for (const [x, y] of [[103, 109], [111, 118], [103, 132]]) {
+    for (const [x, y] of LAMPS) if (y + 2 > FEET === front) {
       w.rect(x, y - 17, 1, 20, M.COPPER_D);
       w.rect(x - 3, y - 18, 7, 1, M.COPPER_D);
       w.lightRect(x - 2, y - 17, 5, 1, N.LED_SOFT, w.hallG);
     }
+    if (!front) return;
+    // Café gardens between the walkers and the tram, umbrellas clear of the shop signs.
+    terrace(w, 240, 118, M.TRIM); terrace(w, 276, 118, M.COPPER); terrace(w, 311, 118, M.TRIM);
+    // The tram's contact wire sags between masts on the far side of the track, below the shopfronts.
+    for (let x = MAST0 - SPAN; x < 360; x += SPAN) w.wire(x, WIRE, x + SPAN, WIRE, SAG);
+    for (let x = MAST0; x < 360; x += SPAN) {
+      w.rect(x, WIRE - 10, 1, TRAM_Y - 8 - (WIRE - 10), M.COPPER_D);
+      w.rect(x - 1, WIRE - 10, 3, 1, M.COPPER_D);
+      line(x + 1, WIRE - 6, x + 3, WIRE - 1, (px, py) => w.px(px, py, M.COPPER_D));
+    }
+  };
+  // Height of the wire above x, matching w.wire()'s curve, so the pantograph always touches it.
+  const wireAt = (x) => {
+    const t = ((((x - MAST0) % SPAN) + SPAN) % SPAN) / SPAN;
+    return Math.round(WIRE + SAG * 4 * t * (1 - t));
   };
 
   const drawTram = (w, dt) => {
     w.tramX += dt * 22;
     if (w.tramX > 380) w.tramX = -150;
-    const x = Math.round(w.tramX), y = 145;
+    const x = Math.round(w.tramX), y = TRAM_Y;
     for (let i = 0; i < 3; i++) {
       const sx = x + i * 28;
       w.rect(sx, y - 16, 26, 15, M.TRAM_W);
@@ -264,9 +290,11 @@
     if (w.dark > .2) w.pxLight(x + 84, y - 4, N.HEAD);
     w.rect(x + 60, y - 16, 14, 3, M.COPPER_D);
     w.lightRect(x + 62, y - 15, 9, 1, N.TRAM_LED, w.tramG);
-    line(x + 35, y - 17, x + 42, y - 36, (px,py)=>w.px(px,py,M.COPPER_D));
-    line(x + 42, y - 36, x + 49, y - 17, (px,py)=>w.px(px,py,M.COPPER_D));
-    w.rect(x + 40, y - 38, 5, 1, M.COPPER_D);
+    const top = wireAt(x + 42) + 1;
+    w.rect(x + 36, y - 17, 13, 1, M.COPPER_D);
+    line(x + 38, y - 18, x + 41, top + 1, (px,py)=>w.px(px,py,M.COPPER_D));
+    line(x + 43, top + 1, x + 46, y - 18, (px,py)=>w.px(px,py,M.COPPER_D));
+    w.rect(x + 39, top, 7, 1, M.COPPER_D);
   };
 
   const build = (w, ctx) => {
@@ -275,21 +303,19 @@
     w.noSignal=true; w.walkTop=118; w.roadTop=136;
     w.monasteryG=w.addGroup(18,30,'room');
     w.hallG=w.addGroup(18.2,29.8,'room');
-    w.cafeG=w.addGroup(12,25,'room');
+    // Café and bookshop open into the evening; off again at both noons.
+    w.cafeG=w.addGroup(17.6,25,'room');
     w.tramG=w.addGroup(12,40,'room');
     w.depth=0;
     for(let x=-40;x<360;x+=15)w.rect(x,94+Math.abs(x%8),14,24,M.FAR1);
     w.depth=2;
-    drawSquare(w); drawJasnaGora(w); drawTownHall(w); drawAleje(w);
-    terrace(w,240,122,M.TRIM); terrace(w,276,122,M.COPPER); terrace(w,311,123,M.TRIM);
+    drawSquare(w); drawJasnaGora(w); drawTownHall(w); drawAleje(w); drawProps(w,false);
     // Tram crossing at the Aleja Wolności/Kościuszki end, in front of the square.
-    w.rect(-40,138,400,1,M.RAIL); w.rect(-40,146,400,1,M.RAIL);
-    w.rect(-40,107,400,1,M.WIRE);
-    for(const x of [-12,343])w.rect(x,95,1,53,M.COPPER_D);
+    w.rect(-40,TRAM_Y-7,400,1,M.RAIL); w.rect(-40,TRAM_Y+1,400,1,M.RAIL);
     w.tramX=-96;
     w.strata=[{x:-20,y:15,w:65,v:.6},{x:220,y:12,w:75,v:.4}];
-    w.cat.x=217;w.cat.y=128;
-    for(const [x,y,dir,speed,style] of [[20,123,1,5,'coat'],[87,129,-1,4,'shirt'],[150,129,1,5,'coat'],[221,125,-1,6,'shirt'],[290,128,1,4,'suit']])w.peds.push({x,y,dir,speed,style,phase:x%3});
+    w.cat.x=217;w.cat.y=121;
+    for(const [x,y,dir,speed,style] of [[20,FEET+1,1,5,'coat'],[87,FEET+2,-1,4,'shirt'],[150,FEET,1,5,'coat'],[221,FEET+2,-1,6,'shirt'],[290,FEET+1,1,4,'suit']])w.peds.push({x,y,dir,speed,style,phase:x%3});
     w.personStyles.coat=[M.COPPER_D,M.SUIT,M.HAIR];
   };
   const draw=(w,dt,hour)=>{
@@ -298,7 +324,7 @@
       for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++)if(dx*dx+dy*dy<=16)w.tube(cx+dx,cy+dy,M.TRIM,N.LED_SOFT,w.hallG);
       for(const [angle,length] of [[(hour%1)*Math.PI*2-Math.PI/2,3],[(hour%12)/12*Math.PI*2-Math.PI/2,2]])line(cx,cy,cx+Math.round(Math.cos(angle)*length),cy+Math.round(Math.sin(angle)*length),(x,y)=>w.px(x,y,M.COPPER_D));
     }
-    w.drawPeople(dt,hour);w.drawCat(dt,hour);drawTram(w,dt);
+    w.drawPeople(dt,hour);w.drawCat(dt,hour);drawProps(w,true);drawTram(w,dt);
   };
   CitySwitch.define('czestochowa-switch',{
     city:'Częstochowa',label:'Częstochowa day and night',
