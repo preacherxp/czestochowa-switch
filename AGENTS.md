@@ -14,6 +14,10 @@ experience when changing a scene or exporting a preview.
 - This workspace may contain a combined gallery and independent repositories in
   `repos/<city>-switch/`. A standalone repository has its own engine, scene, demo,
   and `.nojekyll`. Check both locations before editing; keep matching copies in sync.
+- In the central repository, the gallery loads scripts directly from the city
+  submodules. Commit and publish a city change first, then commit its new
+  submodule pointer centrally. Root-level scene snapshots outside that checkout
+  are not the gallery source. Never publish a gitlink to a commit absent remotely.
 - Read local instructions, inspect Git status and remotes, and preserve existing
   user changes. Do not assume the gallery directory is itself a Git repository.
 - Keep this buildless: ordinary JavaScript, a custom element, and static HTML.
@@ -125,6 +129,7 @@ Use a short, repeatable check and keep evidence of what actually ran.
   demo script too. Run `git diff --check` in each changed repository.
 - Confirm every script/asset in the standalone demo exists and uses a relative
   path. It must load only its own city and engine, with the engine first.
+- In the central repository run `node tools/validate-switches.cjs`.
 - Run `node test-scene.cjs` when present. Add or extend one small engine test for
   nontrivial scene changes. It should instantiate the real scene engine, advance
   several frames at noon, golden hour, dusk, night, midnight, dawn, and next noon,
