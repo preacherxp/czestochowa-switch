@@ -44,4 +44,4 @@ GitHub Pages serves `/` from `main`; push to that branch to update the demo.
 
 The shared engine is derived from `tokyo-switch.js`; the original idea is “住人のいるスイッチ” by @Lattice_Node ([original project](https://ludion.ai/p/toggle-daylight), MIT), as credited in the engine source.
 
-The MP4 is a seven-second recording of the complete browser-rendered switch at 800 × 500 and 60 fps, including the moving glass lens.
+The MP4 is a seven-second recording of the complete browser-rendered switch at 1600 × 1000 and 60 fps, including the moving glass lens.
